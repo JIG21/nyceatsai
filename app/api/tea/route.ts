@@ -11,14 +11,11 @@ export async function POST(req: Request) {
   try {
     const { query } = await req.json();
     if (!query) {
-      return NextResponse.json(
-        { error: "Missing query" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing query" }, { status: 400 });
     }
 
     /* ------------------------------------------------------------
-        1) Ask Grok to analyze the user prompt
+        1) Ask Grok for JSON output with REAL restaurant names
     ------------------------------------------------------------ */
     const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
@@ -32,9 +29,19 @@ export async function POST(req: Request) {
           {
             role: "system",
             content:
-              "You are TEA, NYC’s real-time food intelligence engine. " +
-              "Summarize insights, extract restaurant names, neighborhoods, dishes, " +
-              "and trends. Keep the response short and helpful."
+              "You are TEA, NYC’s food intelligence engine.\n" +
+              "ALWAYS output ONLY valid JSON in this exact structure:\n\n" +
+              "{\n" +
+              '  "summary": "Short helpful human summary",\n' +
+              '  "restaurants": ["name1", "name2", "name3"]\n' +
+              "}\n\n" +
+              "Rules:\n" +
+              "• Restaurants MUST BE real NYC restaurants.\n" +
+              "• Base them on the user's request.\n" +
+              "• Always include 3–5 restaurants.\n" +
+              "• Never output markdown.\n" +
+              "• Never add commentary.\n" +
+              "• Respond ONLY with JSON.\n",
           },
           { role: "user", content: query },
         ],
@@ -43,19 +50,24 @@ export async function POST(req: Request) {
 
     const grokJSON = await grokRes.json();
 
-    const answer =
-      grokJSON?.choices?.[0]?.message?.content ||
-      "Here’s what I found.";
+    let summary = "Here’s what I found.";
+    let names: string[] = [];
+
+    // Parse JSON from Grok safely
+    try {
+      const parsed = JSON.parse(grokJSON?.choices?.[0]?.message?.content || "{}");
+      if (parsed.summary) summary = parsed.summary;
+      if (parsed.restaurants) names = parsed.restaurants;
+    } catch (err) {
+      console.error("JSON parse error:", err);
+    }
+
+    if (names.length === 0) {
+      names = ["Restaurant"]; // fallback (rarely used now)
+    }
 
     /* ------------------------------------------------------------
-        2) Extract restaurant names (backup extractor)
-    ------------------------------------------------------------ */
-    const extractedNames = extractRestaurants(answer);
-    const names = extractedNames.length > 0 ? extractedNames : ["Restaurant"];
-
-
-    /* ------------------------------------------------------------
-        3) Build restaurant objects w/ photos + map intel
+        2) Build restaurant objects w/ photos
     ------------------------------------------------------------ */
     const restaurants = [];
     for (const name of names) {
@@ -77,10 +89,9 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({
-      answer,
+      answer: summary,
       restaurants,
     });
-
   } catch (err) {
     console.error("TEA SERVER ERROR:", err);
 
@@ -92,48 +103,23 @@ export async function POST(req: Request) {
 }
 
 /* ============================================================================
-    Extract restaurant names from Grok summary
-============================================================================ */
-function extractRestaurants(text: string): string[] {
-  const found: string[] = [];
-  const lines = text.split("\n");
-
-  for (const line of lines) {
-    const cleaned = line
-      .replace("•", "")
-      .replace("-", "")
-      .trim();
-
-    if (
-      cleaned.length > 2 &&
-      /^[A-Za-z0-9\s'&.-]+$/.test(cleaned) && // avoid weird junk
-      cleaned.split(" ").length <= 5 // keep short names
-    ) {
-      found.push(cleaned);
-    }
-  }
-
-  return [...new Set(found)];
-}
-
-/* ============================================================================
-    Get Real Restaurant Photos 
-    (Google → Yelp → Grok fallback)
+    Get Real Restaurant Photos
+    Google → Yelp → Grok fallback
 ============================================================================ */
 async function fetchPhotos(name: string): Promise<string[]> {
   const results: string[] = [];
 
   /* ------------------------------------------------------------
-        A) Google Places
+      A) GOOGLE PLACES PHOTOS
   ------------------------------------------------------------ */
-  const googleURL =
-    `https://maps.googleapis.com/maps/api/place/findplacefromtext/json` +
-    `?input=${encodeURIComponent(name + " NYC")}` +
-    `&inputtype=textquery` +
-    `&fields=photos,place_id` +
-    `&key=${GOOGLE_KEY}`;
-
   try {
+    const googleURL =
+      `https://maps.googleapis.com/maps/api/place/findplacefromtext/json` +
+      `?input=${encodeURIComponent(name + " NYC")}` +
+      `&inputtype=textquery` +
+      `&fields=photos,place_id` +
+      `&key=${GOOGLE_KEY}`;
+
     const googleRes = await fetch(googleURL);
     const googleJSON = await googleRes.json();
 
@@ -145,11 +131,11 @@ async function fetchPhotos(name: string): Promise<string[]> {
       }
     }
   } catch (e) {
-    console.warn("Google Photo error:", e);
+    console.warn("Google error:", e);
   }
 
   /* ------------------------------------------------------------
-        B) Yelp Photos (optional)
+      B) YELP PHOTOS
   ------------------------------------------------------------ */
   if (YELP_KEY) {
     try {
@@ -161,8 +147,8 @@ async function fetchPhotos(name: string): Promise<string[]> {
       );
 
       const yelpJSON = await yelpRes.json();
-
       const biz = yelpJSON?.businesses?.[0];
+
       if (biz) {
         if (biz.image_url) results.push(biz.image_url);
         if (biz.photos) results.push(...biz.photos);
@@ -173,17 +159,17 @@ async function fetchPhotos(name: string): Promise<string[]> {
   }
 
   /* ------------------------------------------------------------
-        C) Grok Web Image Search (best fallback)
+      C) GROK IMAGE SEARCH (fallback)
   ------------------------------------------------------------ */
   try {
-    const grokImgRes = await fetch(`https://api.x.ai/v1/images/search`, {
+    const grokImgRes = await fetch("https://api.x.ai/v1/images/search", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${XAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        query: `${name} NYC restaurant interior dishes outside`,
+        query: `${name} NYC restaurant interior exterior dishes`,
         num_images: 5,
       }),
     });
@@ -194,11 +180,8 @@ async function fetchPhotos(name: string): Promise<string[]> {
       grokImgJSON.images.forEach((img: any) => results.push(img.url));
     }
   } catch (e) {
-    console.warn("Grok Image error:", e);
+    console.warn("Grok image error:", e);
   }
 
-  /* ------------------------------------------------------------
-        Remove duplicates
-  ------------------------------------------------------------ */
   return [...new Set(results)];
 }
