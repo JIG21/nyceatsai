@@ -60,6 +60,7 @@ body {
   background-size: 46px 46px;
   opacity: 0.55;
   mask-image: radial-gradient(circle at 50% 50%, black 65%, transparent 100%);
+  animation: grid-pan 18s linear infinite;
 }
 
 .neon-orb {
@@ -69,18 +70,21 @@ body {
   border-radius: 9999px;
   filter: blur(120px);
   opacity: 0.5;
+  animation: float 16s ease-in-out infinite;
 }
 
 .orb-one {
   background: #1dd3b0;
   top: -160px;
   left: -120px;
+  animation-delay: 1s;
 }
 
 .orb-two {
   background: #6e7dff;
   bottom: -120px;
   right: -80px;
+  animation-delay: 0.5s;
 }
 
 .welcome-shell {
@@ -94,6 +98,8 @@ body {
     radial-gradient(circle at 85% 16%, rgba(59, 130, 246, 0.12), transparent 32%),
     radial-gradient(circle at 55% 70%, rgba(236, 72, 153, 0.1), transparent 30%),
     linear-gradient(160deg, #05070f 0%, #04060f 45%, #050918 100%);
+  background-size: 140% 140%;
+  animation: sky-shift 24s ease-in-out infinite alternate;
   overflow: hidden;
 }
 
@@ -175,6 +181,15 @@ body {
   }
 }
 
+@keyframes grid-pan {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 92px 92px, 92px 92px;
+  }
+}
+
 .noise {
   position: absolute;
   inset: 0;
@@ -196,6 +211,18 @@ body {
   }
   to {
     transform: translateX(120%);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(20px, -30px, 0) scale(1.05);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
