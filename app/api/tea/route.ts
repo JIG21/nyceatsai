@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 
-const XAI_API_KEY = process.env.XAI_API_KEY!;
-const GOOGLE_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY!;
-const YELP_KEY = process.env.YELP_API_KEY || "";
+const XAI_API_KEY = process.env.XAI_API_KEY;
+const GOOGLE_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+const YELP_KEY = process.env.YELP_API_KEY;
 
 /* ============================================================================
     POST — TEA Intelligence Engine 
 ============================================================================ */
 export async function POST(req: Request) {
+  if (!XAI_API_KEY) {
+    return NextResponse.json({ error: "Missing XAI_API_KEY" }, { status: 500 });
+  }
+
   try {
     const { query } = await req.json();
     if (!query) {
@@ -47,6 +51,13 @@ export async function POST(req: Request) {
         ],
       }),
     });
+
+    if (!grokRes.ok) {
+      return NextResponse.json(
+        { error: "Upstream TEA model error" },
+        { status: grokRes.status }
+      );
+    }
 
     const grokJSON = await grokRes.json();
 
@@ -112,26 +123,28 @@ async function fetchPhotos(name: string): Promise<string[]> {
   /* ------------------------------------------------------------
       A) GOOGLE PLACES PHOTOS
   ------------------------------------------------------------ */
-  try {
-    const googleURL =
-      `https://maps.googleapis.com/maps/api/place/findplacefromtext/json` +
-      `?input=${encodeURIComponent(name + " NYC")}` +
-      `&inputtype=textquery` +
-      `&fields=photos,place_id` +
-      `&key=${GOOGLE_KEY}`;
+  if (GOOGLE_KEY) {
+    try {
+      const googleURL =
+        `https://maps.googleapis.com/maps/api/place/findplacefromtext/json` +
+        `?input=${encodeURIComponent(name + " NYC")}` +
+        `&inputtype=textquery` +
+        `&fields=photos,place_id` +
+        `&key=${GOOGLE_KEY}`;
 
-    const googleRes = await fetch(googleURL);
-    const googleJSON = await googleRes.json();
+      const googleRes = await fetch(googleURL);
+      const googleJSON = await googleRes.json();
 
-    if (googleJSON?.candidates?.[0]?.photos) {
-      for (const p of googleJSON.candidates[0].photos.slice(0, 5)) {
-        results.push(
-          `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=${p.photo_reference}&key=${GOOGLE_KEY}`
-        );
+      if (googleJSON?.candidates?.[0]?.photos) {
+        for (const p of googleJSON.candidates[0].photos.slice(0, 5)) {
+          results.push(
+            `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=${p.photo_reference}&key=${GOOGLE_KEY}`
+          );
+        }
       }
+    } catch (e) {
+      console.warn("Google error:", e);
     }
-  } catch (e) {
-    console.warn("Google error:", e);
   }
 
   /* ------------------------------------------------------------
@@ -177,7 +190,9 @@ async function fetchPhotos(name: string): Promise<string[]> {
     const grokImgJSON = await grokImgRes.json();
 
     if (grokImgJSON?.images) {
-      grokImgJSON.images.forEach((img: any) => results.push(img.url));
+      grokImgJSON.images.forEach((img: { url?: string }) => {
+        if (img.url) results.push(img.url);
+      });
     }
   } catch (e) {
     console.warn("Grok image error:", e);
