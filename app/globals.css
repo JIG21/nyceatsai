@@ -22,63 +22,294 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Söhne", "Helvetica Neue", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: -0.01em;
 }
 
-/* Futuristic swirling gradient background */
-.bg-future {
-  background: radial-gradient(circle at 20% 20%, #ff2d55, transparent 60%),
-              radial-gradient(circle at 80% 20%, #3b82f6, transparent 60%),
-              radial-gradient(circle at 50% 80%, #9333ea, transparent 60%),
-              #0a0a0a;
+.bg-night {
+  background: radial-gradient(circle at 15% 20%, rgba(16, 185, 129, 0.16), transparent 35%),
+    radial-gradient(circle at 82% 12%, rgba(59, 130, 246, 0.14), transparent 32%),
+    radial-gradient(circle at 60% 68%, rgba(236, 72, 153, 0.12), transparent 32%),
+    linear-gradient(145deg, #05070f 0%, #040512 40%, #050918 100%);
+  background-size: 140% 140%;
+  animation: sky-shift 22s ease-in-out infinite alternate;
 }
 
-/* Glass card */
 .glass {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Glow text */
-.glow {
-  text-shadow: 0 0 12px rgba(255, 255, 255, 0.6),
-               0 0 24px rgba(255, 255, 255, 0.4),
-               0 0 48px rgba(255, 255, 255, 0.2);
+.glass-xl {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
-@keyframes pulse-slow {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
-  }
+
+.shadow-glow {
+  box-shadow: 0 10px 40px rgba(16, 185, 129, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.city-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 46px 46px;
+  opacity: 0.55;
+  mask-image: radial-gradient(circle at 50% 50%, black 65%, transparent 100%);
+}
+
+.neon-orb {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 9999px;
+  filter: blur(120px);
+  opacity: 0.5;
+}
+
+.orb-one {
+  background: #1dd3b0;
+  top: -160px;
+  left: -120px;
+}
+
+.orb-two {
+  background: #6e7dff;
+  bottom: -120px;
+  right: -80px;
+}
+
+.welcome-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(circle at 12% 18%, rgba(74, 222, 128, 0.14), transparent 35%),
+    radial-gradient(circle at 85% 16%, rgba(59, 130, 246, 0.12), transparent 32%),
+    radial-gradient(circle at 55% 70%, rgba(236, 72, 153, 0.1), transparent 30%),
+    linear-gradient(160deg, #05070f 0%, #04060f 45%, #050918 100%);
+  overflow: hidden;
+}
+
+.welcome-panel {
+  width: min(980px, 100%);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 32px;
+  padding: 32px;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-panel::before,
+.welcome-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.welcome-panel::before {
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.08) 50%, transparent 100%);
+  mix-blend-mode: screen;
+  transform: translateX(-40%);
+  animation: sweep 12s linear infinite;
+}
+
+.welcome-panel::after {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.4;
+}
+
+.welcome-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(120deg, #34d399, #22d3ee);
+  color: #02150c;
+  padding: 14px 18px;
+  border-radius: 9999px;
+  font-weight: 700;
+  box-shadow: 0 15px 50px rgba(52, 211, 153, 0.35), 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.typing-line {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+.typing-line::after {
+  content: "";
+  width: 10px;
+  height: 32px;
+  margin-left: 6px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
   50% {
-    transform: scale(1.05);
-    box-shadow: 0 0 35px rgba(255, 255, 255, 0.7);
+    opacity: 0;
+  }
+}
+
+@keyframes sky-shift {
+  from {
+    background-position: 0% 0%;
+  }
+  to {
+    background-position: 100% 100%;
+  }
+}
+
+.noise {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+}
+
+.city-stripe {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.06) 50%, transparent 100%);
+  transform: translateX(-40%);
+  animation: sweep 10s linear infinite;
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(-60%);
+  }
+  to {
+    transform: translateX(120%);
+  }
+}
+
+.city-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+.city-card-overlay {
+  position: absolute;
+  inset: 0;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: linear-gradient(180deg, transparent 20%, rgba(0, 0, 0, 0.65) 90%);
+}
+
+.radar-map {
+  height: 180px;
+  border-radius: 20px;
+  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.18), transparent 50%),
+    radial-gradient(circle at 30% 40%, rgba(59, 130, 246, 0.2), transparent 45%),
+    radial-gradient(circle at 70% 60%, rgba(236, 72, 153, 0.18), transparent 50%),
+    rgba(10, 12, 24, 0.9);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.radar-map::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 36px 36px;
+  opacity: 0.7;
+}
+
+.radar-blip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.9);
+  box-shadow: 0 0 40px rgba(16, 185, 129, 0.8);
+  transform: translate(-50%, -50%);
+  animation: pulse 3s infinite;
+}
+
+.radar-blip.delay-200 {
+  animation-delay: 0.5s;
+}
+
+.radar-blip.delay-400 {
+  animation-delay: 1s;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.6);
+    opacity: 0;
   }
   100% {
-    transform: scale(1);
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+    opacity: 0;
   }
 }
 
-.animate-pulse-slow {
-  animation: pulse-slow 3.5s ease-in-out infinite;
-}
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.6s ease-out;
-}
-
-@keyframes launch-mode {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+.loader-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.animate-launch-mode {
-  animation: launch-mode 0.7s ease-out;
+.loader-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: #34d399;
+  animation: bounce 1.4s infinite ease-in-out;
+}
+
+.loader-dot.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.loader-dot.delay-400 {
+  animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
