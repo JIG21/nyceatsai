@@ -20,16 +20,16 @@
 }
 
 body {
-  background: var(--background);
+  background: radial-gradient(circle at 20% 20%, #111827 0%, #0c111c 35%, #05070c 75%);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
 
 .bg-night {
-  background: radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.08), transparent 35%),
-    radial-gradient(circle at 80% 10%, rgba(59, 130, 246, 0.08), transparent 30%),
-    radial-gradient(circle at 60% 70%, rgba(236, 72, 153, 0.08), transparent 30%),
-    #05070f;
+  background: radial-gradient(circle at 30% 20%, rgba(67, 56, 202, 0.18), transparent 28%),
+    radial-gradient(circle at 70% 30%, rgba(16, 185, 129, 0.15), transparent 30%),
+    radial-gradient(circle at 50% 70%, rgba(14, 165, 233, 0.12), transparent 32%),
+    linear-gradient(180deg, #0b0f17 0%, #05070c 80%);
 }
 
 .glass {

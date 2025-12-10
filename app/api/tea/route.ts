@@ -52,6 +52,13 @@ export async function POST(req: Request) {
       }),
     });
 
+    if (!grokRes.ok) {
+      return NextResponse.json(
+        { error: "Upstream TEA model error" },
+        { status: grokRes.status }
+      );
+    }
+
     const grokJSON = await grokRes.json();
 
     let summary = "Here’s what I found.";

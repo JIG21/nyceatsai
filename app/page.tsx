@@ -71,6 +71,10 @@ export default function Home() {
         body: JSON.stringify({ query }),
       });
 
+      if (!res.ok) {
+        throw new Error(`Request failed: ${res.status}`);
+      }
+
       const data = await res.json();
 
       if (data.answer) {
@@ -112,13 +116,8 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen text-white bg-night relative overflow-hidden">
-      <div className="city-grid" />
-      <div className="neon-orb orb-one" />
-      <div className="neon-orb orb-two" />
-      <div className="noise" />
-
-      <div className="relative z-10 max-w-6xl mx-auto px-4 lg:px-6 py-10 space-y-8">
+    <main className="min-h-screen text-white bg-night">
+      <div className="max-w-6xl mx-auto px-4 lg:px-6 py-10 space-y-8">
         <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-400 via-cyan-400 to-blue-500 shadow-glow flex items-center justify-center font-black text-slate-900">
@@ -138,18 +137,13 @@ export default function Home() {
         </header>
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-          <div className="glass-xl p-6 md:p-7 rounded-3xl border border-white/10 relative overflow-hidden">
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="city-stripe" />
-              <div className="city-stripe delay-300" />
-            </div>
-
-            <div className="flex flex-col gap-6 relative">
+          <div className="glass-xl p-6 md:p-7 rounded-3xl border border-white/10">
+            <div className="flex flex-col gap-6">
               <div className="flex items-center gap-3">
                 <div className="flex-1">
-                  <p className="text-sm text-slate-300">Welcome to the grid</p>
+                  <p className="text-sm text-slate-300">Welcome</p>
                   <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
-                    A ChatGPT-like arrival screen with Uber urgency, Snapchat Map energy, and Citymapper clarity.
+                    Your NYC food guide, calm and clear like OpenAI’s home, ready to route you with Uber speed.
                   </h1>
                 </div>
                 <div className="hidden md:flex flex-col items-end gap-2 text-sm text-slate-200">
