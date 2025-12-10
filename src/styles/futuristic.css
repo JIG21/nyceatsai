@@ -1,0 +1,38 @@
+:root{--bg-1:#0f1724;--bg-2:#07101a;--accent-1:#00ffd5;--accent-2:#7c5cff;--muted:rgba(255,255,255,0.88);--muted-2:rgba(255,255,255,0.65);--glass:rgba(255,255,255,0.06);--glass-border:rgba(255,255,255,0.08);--radius:12px;--transition:240ms cubic-bezier(.2,.9,.2,1);--shadow-neon:0 6px 30px rgba(124,92,255,0.18),0 2px 10px rgba(0,255,213,0.06);--scale-0:12px;--scale-1:14px;--scale-2:16px;--scale-3:20px;--scale-4:24px;}
+*{box-sizing:border-box}html,body,#root{height:100%}body{margin:0;background:radial-gradient(1200px 600px at 10% 10%,rgba(124,92,255,0.06),transparent 12%),radial-gradient(800px 400px at 90% 90%,rgba(0,255,213,0.04),transparent 12%),linear-gradient(180deg,var(--bg-1),var(--bg-2));color:var(--muted);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;padding:28px;transition:background 600ms ease;}
+/* Global container for unified look across pages */
+.app-shell{min-height:100vh;display:flex;flex-direction:column;gap:18px}
+/* Animated gradient band that subtly moves */
+.futuristic-aurora{position:fixed;inset:-30% -30% auto -30%;height:60%;pointer-events:none;background:linear-gradient(90deg,rgba(124,92,255,0.12) 0%,rgba(0,255,213,0.10) 35%,rgba(0,112,255,0.06) 70%);filter:blur(72px) saturate(140%);transform:translateZ(0);animation:auroraMove 18s linear infinite;z-index:0;opacity:0.95}
+@keyframes auroraMove{0%{transform:translateX(-8%) rotate(0deg)}50%{transform:translateX(8%) rotate(2.2deg)}100%{transform:translateX(-8%) rotate(0deg)}}
+/* Glass card */
+.glass-card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid var(--glass-border);backdrop-filter:blur(10px) saturate(140%);border-radius:var(--radius);padding:22px;box-shadow:0 8px 40px rgba(2,6,23,0.65);z-index:1}
+/* Neon headings */
+.neon-heading{font-family:'Orbitron',ui-sans-serif,system-ui,-apple-system;color:white;text-shadow:0 0 8px rgba(0,255,213,0.08),0 0 28px rgba(124,92,255,0.06),0 3px 18px rgba(0,0,0,0.6);letter-spacing:0.8px;margin:0}
+/* Typography scale */
+h1{font-size:var(--scale-4);line-height:1.05}
+h2{font-size:var(--scale-3)}h3{font-size:var(--scale-2)}p,button,label,span{font-size:var(--scale-1);color:var(--muted-2)}
+/* Neon glowing text variant */
+.neon-text{color:var(--accent-1);text-shadow:0 0 8px rgba(0,255,213,0.75),0 0 28px rgba(124,92,255,0.28)}
+/* Futuristic button */
+.neon-button{display:inline-flex;align-items:center;gap:10px;padding:10px 16px;background:linear-gradient(90deg,rgba(124,92,255,0.12),rgba(0,255,213,0.06));color:white;border:1px solid transparent;border-radius:10px;cursor:pointer;transition:transform var(--transition),box-shadow var(--transition),border-color var(--transition);box-shadow:var(--shadow-neon);font-weight:700}
+.neon-button:hover{transform:translateY(-4px) scale(1.01);border-color:rgba(255,255,255,0.06);box-shadow:0 22px 80px rgba(124,92,255,0.14),0 10px 40px rgba(0,255,213,0.06)}.neon-button:active{transform:translateY(-1px)}.neon-button:focus{outline:3px solid rgba(0,255,213,0.08);outline-offset:3px}
+.neon-button.--primary{background:linear-gradient(90deg,var(--accent-2),var(--accent-1));color:#06111a;box-shadow:0 10px 60px rgba(124,92,255,0.24)}.neon-button.--ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted-2)}
+/* Loader */
+.neon-loader{display:inline-flex;align-items:center;justify-content:center;gap:12px}
+.neon-spinner{width:52px;height:52px;border-radius:999px;position:relative;display:inline-block}
+.neon-spinner::before{content:"";position:absolute;inset:0;border-radius:999px;padding:3px;background:conic-gradient(from 0deg,var(--accent-1),var(--accent-2),transparent);-webkit-mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);mask-composite:exclude;animation:spin 1.2s linear infinite;filter:drop-shadow(0 6px 24px rgba(124,92,255,0.18))}
+.neon-spinner .core{position:absolute;inset:8px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid var(--glass-border);backdrop-filter:blur(6px)}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Page grid and sizing for app-like layout */
+.container{max-width:1200px;margin:0 auto;padding:18px;width:100%}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo .mark{width:46px;height:46px;border-radius:10px;background:linear-gradient(180deg,var(--accent-2),var(--accent-1));box-shadow:var(--shadow-neon);display:flex;align-items:center;justify-content:center;color:#06111a;font-weight:800}
+.main{flex:1}
+.footer{opacity:0.7;font-size:12px;padding:18px;text-align:center}
+/* Responsive tweaks */
+@media (max-width:720px){body{padding:16px}.container{padding:12px}.logo .mark{width:40px;height:40px}.neon-spinner{width:44px;height:44px}}
+/* Subtle scrollbar matching theme */
+::-webkit-scrollbar{height:10px;width:10px}::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--accent-1),var(--accent-2));border-radius:999px}
+@media (prefers-reduced-motion: reduce){.futuristic-aurora{animation:none}.neon-button,.glass-card{transition:none}.neon-spinner::before{animation:none}}
