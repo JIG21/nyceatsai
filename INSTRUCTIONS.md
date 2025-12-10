@@ -1,22 +1,18 @@
-# Futuristic style patch — Extended integration notes
+# Futuristic style patch — Integration notes
 
-This commit enhances the previous neon theme and adds:
-- Global font imports (Orbitron, Inter, Roboto Mono) for a futuristic look.
-- Responsive typographic scale and container width.
-- Improved animated background (aurora) and subtle grid overlay for a tech feel.
-- Loader component (src/components/Loader.tsx) styled as a neon conic spinner.
-- NeonButton updated to be dependency-free and responsive.
+This patch upgrades the app with a unified futuristic/neon theme, updated background, loader, fonts, sizes, and a reusable button and loader component. It aims to create a cohesive app-like UI across pages.
 
-How to use
-1. The CSS is already imported in `src/index.tsx`. If you previously imported the CSS elsewhere, remove duplicates.
-2. Use the Loader component where you show loading states: `import Loader from './components/Loader';` then `<Loader label="Thinking" />`.
-3. Use NeonButton in place of existing buttons for consistent style: `import NeonButton from './components/NeonButton';`.
-4. Replace your top-level layout with `.app-shell` container or adjust to your layout system.
-5. Tweak colors via CSS variables at the top of `src/styles/futuristic.css`.
+Files added in branch `futuristic-style`:
+- `src/styles/futuristic.css` — global theme, typography scale, aurora background, loader styles, responsive layout.
+- `src/components/NeonButton.tsx` — reusable neon button.
+- `src/components/NeonLoader.tsx` — accessible neon loader component.
+- `src/index.tsx` — example top-level integration that includes the aurora background and imports the CSS.
 
-Accessibility & performance notes
-- Reduced motion respected via media queries.
-- Aurora and overlay are `pointer-events: none` so they don't interfere with interactions.
-- Test color contrast on critical text and form controls (the theme emphasizes neon accents; adjust where necessary).
+How to finalize:
+1. If your project uses TypeScript JSX, ensure `react` and `react-dom` types are present.
+2. Install `classnames` if not present: `npm i classnames` or `yarn add classnames`.
+3. Add the Google Fonts link in your `public/index.html` for Orbitron + Inter for maximum effect.
+4. Replace or enhance existing components to use `NeonButton` and `NeonLoader` where appropriate.
+5. Validate color contrast for critical text.
 
-If you'd like, I can now open a Pull Request with these changes on branch `futuristic-style`.
+If you want tweaks (different color palette, metallic chrome, stronger motion, dark/light modes), tell me which direction and I will update the branch before creating the PR.
