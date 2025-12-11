@@ -1,9 +1,6 @@
-"use client";
-
 import { useState } from "react";
-import Image from "next/image";
 
-type Restaurant = {
+export type Restaurant = {
   name: string;
   neighborhood?: string;
   photos?: string[];
@@ -26,10 +23,113 @@ type ChatMessage = {
   text: string;
 };
 
-export default function Home() {
+function PhotoMapPanel({
+  r,
+  mapEmbed,
+  directionsEmbed,
+}: {
+  r: Restaurant;
+  mapEmbed: string;
+  directionsEmbed: string;
+}) {
+  const [tab, setTab] = useState("map");
+
+  return (
+    <div className="mt-4 bg-white/5 border border-white/10 p-3 rounded-xl">
+      <div className="flex gap-2 mb-3">
+        {["map", "dir", "photos"].map((t) => (
+          <button
+            key={t}
+            className={`px-3 py-1 rounded-full text-xs ${tab === t ? "bg-emerald-500 text-black" : "bg-white/10 text-white"}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setTab(t);
+            }}
+          >
+            {t === "map" && "Map"}
+            {t === "dir" && "Directions"}
+            {t === "photos" && "Photos"}
+          </button>
+        ))}
+      </div>
+
+      <div className="w-full h-48 rounded-xl overflow-hidden border border-white/20">
+        {tab === "map" && <iframe title={`${r.name} map`} src={mapEmbed} className="w-full h-full" />}
+        {tab === "dir" && (
+          <iframe title={`${r.name} directions`} src={directionsEmbed} className="w-full h-full" />
+        )}
+
+        {tab === "photos" && (
+          <div className="flex gap-3 overflow-x-auto p-2 h-full">
+            {r.photos?.map((p, i) => (
+              <img
+                key={i}
+                src={p}
+                alt={`${r.name} ${i + 1}`}
+                className="w-40 h-40 object-cover rounded-xl border border-white/10"
+              />
+            ))}
+
+            {!r.photos?.length && (
+              <p className="text-slate-300 text-xs p-3">No photos found.</p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LaunchHero({ onLaunch }: { onLaunch: () => void }) {
+  return (
+    <section className="flex flex-col items-center animate-fade-in">
+      <div className="relative flex flex-col items-center">
+        <div className="absolute w-[320px] h-[320px] rounded-full bg-white/10 blur-3xl"></div>
+
+        <div className="glass p-6 rounded-3xl shadow-xl relative z-20">
+          <img
+            src="/appstore.png"
+            alt="TEA Logo"
+            width={200}
+            height={200}
+            className="rounded-3xl"
+            loading="lazy"
+          />
+        </div>
+      </div>
+
+      <h1 className="text-center font-extrabold text-5xl md:text-7xl glow leading-tight mt-10">
+        NYC <span className="text-emerald-400">EatsAI</span>
+      </h1>
+
+      <p className="mt-4 text-slate-200 text-center max-w-xl text-lg">
+        Real-time NYC food intelligence — powered by TEA and live local data.
+      </p>
+
+      <button
+        id="launch-btn"
+        onClick={onLaunch}
+        className="mt-10 px-8 py-4 rounded-full bg-white text-black font-semibold text-lg shadow-[0_0_20px_rgba(255,255,255,0.5)] animate-pulse-slow hover:scale-110 hover:shadow-[0_0_40px_rgba(255,255,255,0.9)] active:scale-95 transition-all duration-300"
+      >
+        Launch TEA 🚀
+      </button>
+    </section>
+  );
+}
+
+function LoadingPanel() {
+  return (
+    <section className="flex flex-col items-center text-center animate-launch-mode">
+      <h2 className="text-4xl font-bold glow mb-4">TEA Online</h2>
+      <p className="text-slate-200 max-w-lg text-lg mb-8">Connecting to live NYC food data…</p>
+      <div className="w-20 h-20 border-t-4 border-emerald-400 rounded-full animate-spin"></div>
+    </section>
+  );
+}
+
+export default function App() {
   const [launched, setLaunched] = useState(false);
   const [loaded, setLoaded] = useState(false);
-
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -42,7 +142,6 @@ export default function Home() {
         "• Pizza spots going viral on X right now",
     },
   ]);
-
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -74,10 +173,7 @@ export default function Home() {
       const data = await res.json();
 
       if (data.answer) {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", text: data.answer },
-        ]);
+        setMessages((prev) => [...prev, { role: "assistant", text: data.answer }]);
       }
 
       if (Array.isArray(data.restaurants)) {
@@ -87,10 +183,7 @@ export default function Home() {
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          text: "⚠️ TEA ran into a problem. Check your API keys or try again.",
-        },
+        { role: "assistant", text: "⚠️ TEA ran into a problem. Check your API keys or try again." },
       ]);
     }
 
@@ -99,66 +192,12 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-future flex flex-col items-center justify-center px-4 py-10 text-white">
+      {!launched && <LaunchHero onLaunch={handleLaunch} />}
 
-      {/* HERO */}
-      {!launched && (
-        <section className="flex flex-col items-center animate-fade-in">
-          <div className="relative flex flex-col items-center">
-            <div className="absolute w-[320px] h-[320px] rounded-full bg-white/10 blur-3xl"></div>
+      {launched && !loaded && <LoadingPanel />}
 
-            <div className="glass p-6 rounded-3xl shadow-xl relative z-20">
-              <Image
-                src="/appstore.png"
-                alt="TEA Logo"
-                width={200}
-                height={200}
-                className="rounded-3xl"
-                priority
-              />
-            </div>
-          </div>
-
-          <h1 className="text-center font-extrabold text-5xl md:text-7xl glow leading-tight mt-10">
-            NYC <span className="text-emerald-400">EatsAI</span>
-          </h1>
-
-          <p className="mt-4 text-slate-200 text-center max-w-xl text-lg">
-            Real-time NYC food intelligence — powered by TEA, Grok, Google, and the live internet.
-          </p>
-
-          <button
-            id="launch-btn"
-            onClick={handleLaunch}
-            className="
-              mt-10 px-8 py-4 rounded-full 
-              bg-white text-black font-semibold text-lg
-              shadow-[0_0_20px_rgba(255,255,255,0.5)]
-              animate-pulse-slow
-              hover:scale-110 hover:shadow-[0_0_40px_rgba(255,255,255,0.9)]
-              active:scale-95 transition-all duration-300
-            "
-          >
-            Launch TEA 🚀
-          </button>
-        </section>
-      )}
-
-      {/* LOADING */}
-      {launched && !loaded && (
-        <section className="flex flex-col items-center text-center animate-launch-mode">
-          <h2 className="text-4xl font-bold glow mb-4">TEA Online</h2>
-          <p className="text-slate-200 max-w-lg text-lg mb-8">
-            Connecting to live NYC food data…
-          </p>
-          <div className="w-20 h-20 border-t-4 border-emerald-400 rounded-full animate-spin"></div>
-        </section>
-      )}
-
-      {/* MAIN UI */}
       {loaded && (
         <section className="w-full max-w-7xl mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          {/* CHAT PANEL */}
           <div className="glass p-6 rounded-3xl h-[600px] flex flex-col overflow-hidden">
             <h2 className="text-2xl font-bold glow text-center">TEA Assistant</h2>
 
@@ -204,12 +243,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* RESTAURANT INTEL */}
           <div className="glass p-6 rounded-3xl h-[600px] overflow-y-auto">
             <h2 className="text-2xl font-bold glow text-center mb-4">NYC Food Intel</h2>
 
             <div className="grid gap-4">
-
               {restaurants.length === 0 && (
                 <p className="text-center text-slate-300 text-sm">
                   Ask TEA a question to load real-time NYC restaurant intelligence.
@@ -219,9 +256,7 @@ export default function Home() {
               {restaurants.map((r, idx) => {
                 const isExpanded = expandedIndex === idx;
 
-                const q = encodeURIComponent(
-                  r.map_query || `${r.name} ${r.neighborhood ?? "NYC"}`
-                );
+                const q = encodeURIComponent(r.map_query || `${r.name} ${r.neighborhood ?? "NYC"}`);
 
                 const mapEmbed = `https://www.google.com/maps?q=${q}&output=embed`;
                 const directionsEmbed = `https://www.google.com/maps?output=embed&daddr=${q}`;
@@ -229,12 +264,9 @@ export default function Home() {
                 return (
                   <div
                     key={idx}
-                    className={`
-                      p-4 rounded-2xl bg-white/5 border border-white/10
-                      hover:bg-white/10 hover:scale-[1.02]
-                      transition shadow-[0_0_15px_rgba(255,255,255,0.1)]
-                      ${isExpanded ? "ring-2 ring-emerald-400/60" : ""}
-                    `}
+                    className={`p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:scale-[1.02] transition shadow-[0_0_15px_rgba(255,255,255,0.1)] ${
+                      isExpanded ? "ring-2 ring-emerald-400/60" : ""
+                    }`}
                     onClick={() => setExpandedIndex(isExpanded ? null : idx)}
                   >
                     <h3 className="text-lg font-semibold">{r.name}</h3>
@@ -245,13 +277,8 @@ export default function Home() {
                       {r.price_level && ` · ${r.price_level}`}
                     </p>
 
-                    {/* EXPANDED PANEL */}
                     {isExpanded && (
-                      <PhotoMapPanel
-                        r={r}
-                        mapEmbed={mapEmbed}
-                        directionsEmbed={directionsEmbed}
-                      />
+                      <PhotoMapPanel r={r} mapEmbed={mapEmbed} directionsEmbed={directionsEmbed} />
                     )}
                   </div>
                 );
@@ -261,68 +288,5 @@ export default function Home() {
         </section>
       )}
     </main>
-  );
-}
-
-/* ------------------------------------------------------------
-        EXPANDED PANEL: MAP │ DIRECTIONS │ PHOTOS
------------------------------------------------------------- */
-function PhotoMapPanel({
-  r,
-  mapEmbed,
-  directionsEmbed,
-}: {
-  r: Restaurant;
-  mapEmbed: string;
-  directionsEmbed: string;
-}) {
-  const [tab, setTab] = useState("map");
-
-  return (
-    <div className="mt-4 bg-white/5 border border-white/10 p-3 rounded-xl">
-      {/* TABS */}
-      <div className="flex gap-2 mb-3">
-        {["map", "dir", "photos"].map((t) => (
-          <button
-            key={t}
-            className={`
-              px-3 py-1 rounded-full text-xs
-              ${tab === t ? "bg-emerald-500 text-black" : "bg-white/10 text-white"}
-            `}
-            onClick={(e) => {
-              e.stopPropagation();
-              setTab(t);
-            }}
-          >
-            {t === "map" && "Map"}
-            {t === "dir" && "Directions"}
-            {t === "photos" && "Photos"}
-          </button>
-        ))}
-      </div>
-
-      {/* CONTENT */}
-      <div className="w-full h-48 rounded-xl overflow-hidden border border-white/20">
-        {tab === "map" && <iframe src={mapEmbed} className="w-full h-full" />}
-        {tab === "dir" && <iframe src={directionsEmbed} className="w-full h-full" />}
-
-        {/* PHOTO GALLERY */}
-        {tab === "photos" && (
-          <div className="flex gap-3 overflow-x-auto p-2 h-full">
-            {r.photos?.map((p, i) => (
-              <img
-                key={i}
-                src={p}
-                className="w-40 h-40 object-cover rounded-xl border border-white/10"
-              />
-            ))}
-
-            {!r.photos?.length && (
-              <p className="text-slate-300 text-xs p-3">No photos found.</p>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
   );
 }

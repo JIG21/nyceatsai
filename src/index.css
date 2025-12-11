@@ -1,36 +1,26 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Poppins', Arial, Helvetica, sans-serif;
+  min-height: 100vh;
 }
 
 /* Futuristic swirling gradient background */
 .bg-future {
   background: radial-gradient(circle at 20% 20%, #ff2d55, transparent 60%),
-              radial-gradient(circle at 80% 20%, #3b82f6, transparent 60%),
-              radial-gradient(circle at 50% 80%, #9333ea, transparent 60%),
-              #0a0a0a;
+    radial-gradient(circle at 80% 20%, #3b82f6, transparent 60%),
+    radial-gradient(circle at 50% 80%, #9333ea, transparent 60%),
+    #0a0a0a;
 }
 
 /* Glass card */
@@ -43,10 +33,12 @@ body {
 
 /* Glow text */
 .glow {
-  text-shadow: 0 0 12px rgba(255, 255, 255, 0.6),
-               0 0 24px rgba(255, 255, 255, 0.4),
-               0 0 48px rgba(255, 255, 255, 0.2);
+  text-shadow:
+    0 0 12px rgba(255, 255, 255, 0.6),
+    0 0 24px rgba(255, 255, 255, 0.4),
+    0 0 48px rgba(255, 255, 255, 0.2);
 }
+
 @keyframes pulse-slow {
   0% {
     transform: scale(1);
@@ -65,9 +57,16 @@ body {
 .animate-pulse-slow {
   animation: pulse-slow 3.5s ease-in-out infinite;
 }
+
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
@@ -75,8 +74,14 @@ body {
 }
 
 @keyframes launch-mode {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .animate-launch-mode {
