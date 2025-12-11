@@ -1,22 +1,30 @@
-import { NextResponse } from "next/server";
+const path = require("path");
+const express = require("express");
+const cors = require("cors");
+const restaurants = require("../data/restaurants.json");
+require("dotenv").config();
 
-const XAI_API_KEY = process.env.XAI_API_KEY!;
-const GOOGLE_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY!;
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+const XAI_API_KEY = process.env.XAI_API_KEY || "";
+const GOOGLE_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || "";
 const YELP_KEY = process.env.YELP_API_KEY || "";
 
-/* ============================================================================
-    POST — TEA Intelligence Engine 
-============================================================================ */
-export async function POST(req: Request) {
+app.use(cors());
+app.use(express.json());
+
+app.get("/api/restaurants", (_req, res) => {
+  res.json(restaurants);
+});
+
+app.post("/api/tea", async (req, res) => {
   try {
-    const { query } = await req.json();
+    const { query } = req.body;
     if (!query) {
-      return NextResponse.json({ error: "Missing query" }, { status: 400 });
+      return res.status(400).json({ error: "Missing query" });
     }
 
-    /* ------------------------------------------------------------
-        1) Ask Grok for JSON output with REAL restaurant names
-    ------------------------------------------------------------ */
     const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -51,9 +59,8 @@ export async function POST(req: Request) {
     const grokJSON = await grokRes.json();
 
     let summary = "Here’s what I found.";
-    let names: string[] = [];
+    let names = [];
 
-    // Parse JSON from Grok safely
     try {
       const parsed = JSON.parse(grokJSON?.choices?.[0]?.message?.content || "{}");
       if (parsed.summary) summary = parsed.summary;
@@ -63,12 +70,9 @@ export async function POST(req: Request) {
     }
 
     if (names.length === 0) {
-      names = ["Restaurant"]; // fallback (rarely used now)
+      names = ["Restaurant"];
     }
 
-    /* ------------------------------------------------------------
-        2) Build restaurant objects w/ photos
-    ------------------------------------------------------------ */
     const restaurants = [];
     for (const name of names) {
       const photos = await fetchPhotos(name);
@@ -88,30 +92,19 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json({
+    return res.json({
       answer: summary,
       restaurants,
     });
   } catch (err) {
     console.error("TEA SERVER ERROR:", err);
-
-    return NextResponse.json(
-      { error: "Server error", details: String(err) },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: "Server error", details: String(err) });
   }
-}
+});
 
-/* ============================================================================
-    Get Real Restaurant Photos
-    Google → Yelp → Grok fallback
-============================================================================ */
-async function fetchPhotos(name: string): Promise<string[]> {
-  const results: string[] = [];
+async function fetchPhotos(name) {
+  const results = [];
 
-  /* ------------------------------------------------------------
-      A) GOOGLE PLACES PHOTOS
-  ------------------------------------------------------------ */
   try {
     const googleURL =
       `https://maps.googleapis.com/maps/api/place/findplacefromtext/json` +
@@ -134,9 +127,6 @@ async function fetchPhotos(name: string): Promise<string[]> {
     console.warn("Google error:", e);
   }
 
-  /* ------------------------------------------------------------
-      B) YELP PHOTOS
-  ------------------------------------------------------------ */
   if (YELP_KEY) {
     try {
       const yelpRes = await fetch(
@@ -158,9 +148,6 @@ async function fetchPhotos(name: string): Promise<string[]> {
     }
   }
 
-  /* ------------------------------------------------------------
-      C) GROK IMAGE SEARCH (fallback)
-  ------------------------------------------------------------ */
   try {
     const grokImgRes = await fetch("https://api.x.ai/v1/images/search", {
       method: "POST",
@@ -177,7 +164,7 @@ async function fetchPhotos(name: string): Promise<string[]> {
     const grokImgJSON = await grokImgRes.json();
 
     if (grokImgJSON?.images) {
-      grokImgJSON.images.forEach((img: any) => results.push(img.url));
+      grokImgJSON.images.forEach((img) => results.push(img.url));
     }
   } catch (e) {
     console.warn("Grok image error:", e);
@@ -185,3 +172,16 @@ async function fetchPhotos(name: string): Promise<string[]> {
 
   return [...new Set(results)];
 }
+
+if (process.env.NODE_ENV === "production") {
+  const buildPath = path.join(__dirname, "..", "build");
+  app.use(express.static(buildPath));
+
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(buildPath, "index.html"));
+  });
+}
+
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
