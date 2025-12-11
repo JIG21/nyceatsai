@@ -1,7 +1,7 @@
 const path = require("path");
 const express = require("express");
 const cors = require("cors");
-const restaurants = require("../data/restaurants.json");
+const seedRestaurants = require("../data/restaurants.json");
 require("dotenv").config();
 
 const app = express();
@@ -11,11 +11,13 @@ const XAI_API_KEY = process.env.XAI_API_KEY || "";
 const GOOGLE_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || "";
 const YELP_KEY = process.env.YELP_API_KEY || "";
 
+const hasVectorProviders = Boolean(XAI_API_KEY || GOOGLE_KEY || YELP_KEY);
+
 app.use(cors());
 app.use(express.json());
 
 app.get("/api/restaurants", (_req, res) => {
-  res.json(restaurants);
+  res.json(seedRestaurants);
 });
 
 app.post("/api/tea", async (req, res) => {
@@ -25,52 +27,57 @@ app.post("/api/tea", async (req, res) => {
       return res.status(400).json({ error: "Missing query" });
     }
 
-    const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${XAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "grok-beta",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are TEA, NYC’s food intelligence engine.\n" +
-              "ALWAYS output ONLY valid JSON in this exact structure:\n\n" +
-              "{\n" +
-              '  "summary": "Short helpful human summary",\n' +
-              '  "restaurants": ["name1", "name2", "name3"]\n' +
-              "}\n\n" +
-              "Rules:\n" +
-              "• Restaurants MUST BE real NYC restaurants.\n" +
-              "• Base them on the user's request.\n" +
-              "• Always include 3–5 restaurants.\n" +
-              "• Never output markdown.\n" +
-              "• Never add commentary.\n" +
-              "• Respond ONLY with JSON.\n",
-          },
-          { role: "user", content: query },
-        ],
-      }),
-    });
-
-    const grokJSON = await grokRes.json();
-
     let summary = "Here’s what I found.";
     let names = [];
 
-    try {
-      const parsed = JSON.parse(grokJSON?.choices?.[0]?.message?.content || "{}");
-      if (parsed.summary) summary = parsed.summary;
-      if (parsed.restaurants) names = parsed.restaurants;
-    } catch (err) {
-      console.error("JSON parse error:", err);
+    if (XAI_API_KEY) {
+      const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${XAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "grok-beta",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are TEA, NYC’s food intelligence engine.\n" +
+                "ALWAYS output ONLY valid JSON in this exact structure:\n\n" +
+                "{\n" +
+                '  "summary": "Short helpful human summary",\n' +
+                '  "restaurants": ["name1", "name2", "name3"]\n' +
+                "}\n\n" +
+                "Rules:\n" +
+                "• Restaurants MUST BE real NYC restaurants.\n" +
+                "• Base them on the user's request.\n" +
+                "• Always include 3–5 restaurants.\n" +
+                "• Never output markdown.\n" +
+                "• Never add commentary.\n" +
+                "• Respond ONLY with JSON.\n",
+            },
+            { role: "user", content: query },
+          ],
+        }),
+      });
+
+      const grokJSON = await grokRes.json();
+
+      try {
+        const parsed = JSON.parse(grokJSON?.choices?.[0]?.message?.content || "{}");
+        if (parsed.summary) summary = parsed.summary;
+        if (parsed.restaurants) names = parsed.restaurants;
+      } catch (err) {
+        console.error("JSON parse error:", err);
+      }
     }
 
     if (names.length === 0) {
-      names = ["Restaurant"];
+      const defaults = seedRestaurants.slice(0, 3).map((r) => r.name);
+      names = defaults.length > 0 ? defaults : ["Restaurant"];
+      summary =
+        "Live TEA results require API keys, so here are a few NYC favorites to get you started.";
     }
 
     const restaurants = [];
@@ -105,26 +112,32 @@ app.post("/api/tea", async (req, res) => {
 async function fetchPhotos(name) {
   const results = [];
 
-  try {
-    const googleURL =
-      `https://maps.googleapis.com/maps/api/place/findplacefromtext/json` +
-      `?input=${encodeURIComponent(name + " NYC")}` +
-      `&inputtype=textquery` +
-      `&fields=photos,place_id` +
-      `&key=${GOOGLE_KEY}`;
+  if (!hasVectorProviders) {
+    return results;
+  }
 
-    const googleRes = await fetch(googleURL);
-    const googleJSON = await googleRes.json();
+  if (GOOGLE_KEY) {
+    try {
+      const googleURL =
+        `https://maps.googleapis.com/maps/api/place/findplacefromtext/json` +
+        `?input=${encodeURIComponent(name + " NYC")}` +
+        `&inputtype=textquery` +
+        `&fields=photos,place_id` +
+        `&key=${GOOGLE_KEY}`;
 
-    if (googleJSON?.candidates?.[0]?.photos) {
-      for (const p of googleJSON.candidates[0].photos.slice(0, 5)) {
-        results.push(
-          `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=${p.photo_reference}&key=${GOOGLE_KEY}`
-        );
+      const googleRes = await fetch(googleURL);
+      const googleJSON = await googleRes.json();
+
+      if (googleJSON?.candidates?.[0]?.photos) {
+        for (const p of googleJSON.candidates[0].photos.slice(0, 5)) {
+          results.push(
+            `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=${p.photo_reference}&key=${GOOGLE_KEY}`
+          );
+        }
       }
+    } catch (e) {
+      console.warn("Google error:", e);
     }
-  } catch (e) {
-    console.warn("Google error:", e);
   }
 
   if (YELP_KEY) {
@@ -148,26 +161,28 @@ async function fetchPhotos(name) {
     }
   }
 
-  try {
-    const grokImgRes = await fetch("https://api.x.ai/v1/images/search", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${XAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: `${name} NYC restaurant interior exterior dishes`,
-        num_images: 5,
-      }),
-    });
+  if (XAI_API_KEY) {
+    try {
+      const grokImgRes = await fetch("https://api.x.ai/v1/images/search", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${XAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: `${name} NYC restaurant interior exterior dishes`,
+          num_images: 5,
+        }),
+      });
 
-    const grokImgJSON = await grokImgRes.json();
+      const grokImgJSON = await grokImgRes.json();
 
-    if (grokImgJSON?.images) {
-      grokImgJSON.images.forEach((img) => results.push(img.url));
+      if (grokImgJSON?.images) {
+        grokImgJSON.images.forEach((img) => results.push(img.url));
+      }
+    } catch (e) {
+      console.warn("Grok image error:", e);
     }
-  } catch (e) {
-    console.warn("Grok image error:", e);
   }
 
   return [...new Set(results)];

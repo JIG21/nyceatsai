@@ -35,3 +35,7 @@ npm start
 ```
 
 `npm start` serves the compiled React build and the `/api/tea` endpoint from the same Express server.
+
+### Offline defaults
+
+If you have not set API keys, `/api/tea` will return a small set of sample NYC restaurants from `data/restaurants.json` so the UI remains usable in development and preview deployments.
